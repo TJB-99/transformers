@@ -121,6 +121,7 @@ class GenerationMixin:
         attention_mask: Optional[torch.LongTensor] = None,
         decoder_start_token_id: Optional[int] = None,
         use_cache: Optional[bool] = None,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
         **model_specific_kwargs
     ) -> torch.LongTensor:
         r""" Generates sequences for models with a LM head. The method currently supports greedy decoding, beam-search decoding, sampling with temperature, sampling with top-k or nucleus sampling.
@@ -380,10 +381,13 @@ class GenerationMixin:
             assert hasattr(self, "get_encoder"), "{} should have a 'get_encoder' function defined".format(self)
             assert callable(self.get_encoder), "{} should be a method".format(self.get_encoder)
 
-            # get encoder and store encoder outputs
-            encoder = self.get_encoder()
+            if encoder_hidden_states is not None:
+                encoder_outputs = (encoder_hidden_states,)
+            else:
+                # get encoder and store encoder outputs
+                encoder = self.get_encoder()
 
-            encoder_outputs: tuple = encoder(input_ids, attention_mask=attention_mask)
+                encoder_outputs: tuple = encoder(input_ids, attention_mask=attention_mask)
 
         # Expand input ids if num_beams > 1 or num_return_sequences > 1
         if num_return_sequences > 1 or num_beams > 1:
